@@ -5,11 +5,19 @@ using UnityEngine;
 public class Player : MonoBehaviour
 {
     public float speed;
+
+    public float power;
+    public float bulletSpeed;
+    public float maxShotDelay;
+    public float curShotDelay;
+
     public bool isTouchTop;
     public bool isTouchBottom;
     public bool isTouchRight;
     public bool isTouchLeft;
 
+    public GameObject bulletObjA;
+    public GameObject bulletObjB;
     Animator anim;
 
     void Awake()
@@ -18,6 +26,13 @@ public class Player : MonoBehaviour
     }
 
     void Update()
+    {
+        Move();
+        Fire();
+        Reload();
+    }
+
+    void Move()
     {
         float h = Input.GetAxisRaw("Horizontal");
         if ((isTouchRight && h == 1) || (isTouchLeft && h == -1))
@@ -32,8 +47,47 @@ public class Player : MonoBehaviour
 
         transform.position = curPos + nextPos;
 
-        if(Input.GetButtonDown("Horizontal") || Input.GetButtonUp("Horizontal"))
+        if (Input.GetButtonDown("Horizontal") || Input.GetButtonUp("Horizontal"))
             anim.SetInteger("Input", (int)h);
+    }
+
+    void Fire()
+    {
+        if (!Input.GetButton("Fire1"))
+            return;
+
+        if (curShotDelay < maxShotDelay)
+            return;
+
+        switch (power)
+        {
+            case 1:
+                Shot(bulletObjA, 0f);
+                break;
+            case 2:
+                Shot(bulletObjA, 0.1f);
+                Shot(bulletObjA, -0.1f);
+                break;
+            case 3:
+                Shot(bulletObjA, 0.35f);
+                Shot(bulletObjB, 0f);
+                Shot(bulletObjA, -0.35f);
+                break;
+        }
+
+        curShotDelay = 0;
+    }
+
+    void Shot(GameObject bulletType, float bulletDistance)
+    {
+        GameObject bullet = Instantiate(bulletType, transform.position + Vector3.right * bulletDistance, transform.rotation);
+        Rigidbody2D rigid = bullet.GetComponent<Rigidbody2D>();
+        rigid.AddForce(Vector2.up * bulletSpeed, ForceMode2D.Impulse);
+    }
+
+    void Reload()
+    {
+        curShotDelay += Time.deltaTime;
     }
 
     void OnTriggerEnter2D(Collider2D collision)
