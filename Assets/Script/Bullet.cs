@@ -8,6 +8,8 @@ using UnityEngine;
 
 public class Bullet : MonoBehaviour
 {
+    public int damage;
+
     //Trigger Enter 충돌처리를 위한 함수 OnTriggerEnter2D 선언(경계 충돌)
     void OnTriggerEnter2D(Collider2D collision)
     {
