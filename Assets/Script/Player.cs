@@ -4,6 +4,7 @@ using UnityEngine;
 
 /* Player Script
  * 이 스크립트는 플레이어의 이동과 오브젝트와의 상호작용을 담은 스크립트입니다.
+ * 담겨 있는 기능은 이동, 총알 발사, 피격 이벤트, 경계가 있다.
  */
 
 public class Player : MonoBehaviour
@@ -26,7 +27,7 @@ public class Player : MonoBehaviour
     public bool isTouchRight;
     public bool isTouchLeft;
 
-    public GameManager manager;
+    public GameManager manager;     //GameManager 스크립트를 불러오는 변수
     Animator anim;      //Animator 컴포넌트 변수
 
     //초기 변수 초기화를 위한 Awake함수 선언
@@ -91,7 +92,7 @@ public class Player : MonoBehaviour
                 break;
         }
 
-        curShotDelay = 0;
+        curShotDelay = 0;       //발사후 현재 재장전 시간을 초기화
     }
 
     //총알을 발사하는 함수 Shot 선언 (bulletDistance가 양수면 오른쪽 음수면 왼쪽을 뜻함)
@@ -109,7 +110,7 @@ public class Player : MonoBehaviour
         curShotDelay += Time.deltaTime;     //현재 재장전 시간을 재기위해 curShotDelay에 프레임당 시간을 더해준다.
     }
 
-    //Trigger Enter 충돌처리를 위한 함수 OnTriggerEnter2D 선언(경계 충돌)
+    //Trigger Enter 충돌처리를 위한 함수 OnTriggerEnter2D 선언(경계 충돌, 적 충돌)
     //Enter함수는 충돌했을 때 그 순간을 감지한다.
     void OnTriggerEnter2D(Collider2D collision)
     {
@@ -133,10 +134,11 @@ public class Player : MonoBehaviour
                     break;
             }
         }
+        //만약 충돌한 물체가 적 또는 적의 총알이면
         else if(collision.gameObject.tag == "Enemy" || collision.gameObject.tag == "EnemyBullet")
         {
-            manager.RespawnPlayer();
-            gameObject.SetActive(false);
+            manager.RespawnPlayer();        //GameManager안에 있는 RespawnPlayer함수 호출
+            gameObject.SetActive(false);    //player를 비활성화 상태로 만듬
         }
     }
 
