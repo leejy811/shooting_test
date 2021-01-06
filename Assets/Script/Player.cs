@@ -17,14 +17,16 @@ public class Player : MonoBehaviour
     public float maxShotDelay;      //총알의 재장전 속도
     public float curShotDelay;      //현재 총알의 재장전 시간
 
+    public GameObject bulletObjA;       //A타입 총알
+    public GameObject bulletObjB;       //B타입 총알
+
     //플레이어 경계 관련 변수
     public bool isTouchTop;
     public bool isTouchBottom;
     public bool isTouchRight;
     public bool isTouchLeft;
 
-    public GameObject bulletObjA;       //A타입 총알
-    public GameObject bulletObjB;       //B타입 총알
+    public GameManager manager;
     Animator anim;      //Animator 컴포넌트 변수
 
     //초기 변수 초기화를 위한 Awake함수 선언
@@ -130,6 +132,11 @@ public class Player : MonoBehaviour
                     isTouchLeft = true;
                     break;
             }
+        }
+        else if(collision.gameObject.tag == "Enemy" || collision.gameObject.tag == "EnemyBullet")
+        {
+            manager.RespawnPlayer();
+            gameObject.SetActive(false);
         }
     }
 
