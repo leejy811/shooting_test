@@ -26,7 +26,7 @@ public class GameManager : MonoBehaviour
     //초기 변수 초기화를 위한 Awake함수 선언
     void Awake()
     {
-        Player playerLogic = player.GetComponent<Player>();         //player 오브젝트 안에 Player 스크립트를 가져와 playerLogic을 초기화
+        playerLogic = player.GetComponent<Player>();         //player 오브젝트 안에 Player 스크립트를 가져와 playerLogic을 초기화
     }
 
     //프레임당 한번 돌아가는 함수 Update 선언
