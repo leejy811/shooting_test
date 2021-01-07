@@ -12,7 +12,7 @@ public class Enemy : MonoBehaviour
     public string enemyName;    //적 비행기의 이름
     public float speed;         //적 비행기의 속도
     public int health;          //적 비행기의 체력
-    public int enemyScore;
+    public int enemyScore;      //적 비행기의 점수
 
     public float maxShotDelay;      //총알의 재장전 속도
     public float curShotDelay;      //현재 총알의 재장전 시간
@@ -20,9 +20,9 @@ public class Enemy : MonoBehaviour
 
     public GameObject bulletObjA;       //A타입 총알
     public GameObject bulletObjB;       //B타입 총알
-    public GameObject itemCoin;
-    public GameObject itemPower;
-    public GameObject itemBoom;
+    public GameObject itemCoin;         //Coin 아이템
+    public GameObject itemPower;        //Power 아이템
+    public GameObject itemBoom;         //Boom 아이템
     public GameObject player;           //플레이어 호출 변수
 
     public Sprite[] sprites;            //피격시 바꿀 스프라이트 변수
@@ -87,6 +87,7 @@ public class Enemy : MonoBehaviour
     //적 비행기의 피격 이벤트 함수 선언
     public void OnHit(int damage)
     {
+        //만약 체력이 0 이하라면 이미 죽은 것이므로 함수를 나간다.
         if (health <= 0)
             return;
 
@@ -97,20 +98,20 @@ public class Enemy : MonoBehaviour
         //만약 체력이 0보다 작거나 같으면 오브젝트 파괴
         if (health <= 0)
         {
-            Player playerLogic = player.GetComponent<Player>();
-            playerLogic.score += enemyScore;
+            Player playerLogic = player.GetComponent<Player>();     //Player 스크립트를 가져오기 위한 playerLogic변수 선언
+            playerLogic.score += enemyScore;        //적 비행기의 타입별 점수를 Player의 점수에 더함
 
-            int ran = Random.Range(0, 10);
-            if (ran < 5)
+            int ran = Random.Range(0, 10);      //아이템의 확률적 드랍을 위한 랜덤 int 변수 선언
+            if (ran < 5)        //아이템이 나오지 않을 확률 50%
                 Debug.Log("Not Item");
-            else if (ran < 8)
-                Instantiate(itemCoin, transform.position, itemCoin.transform.rotation);
-            else if (ran < 9)
-                Instantiate(itemPower, transform.position, itemPower.transform.rotation);
-            else if (ran < 10)
-                Instantiate(itemBoom, transform.position, itemBoom.transform.rotation);
+            else if (ran < 8)       //Coin이 나올 확률 30%
+                Instantiate(itemCoin, transform.position, itemCoin.transform.rotation);         //Coin을 적 비행기위치의 자신의 회전 값으로 생성
+            else if (ran < 9)       //Power가 나올 확률 10%
+                Instantiate(itemPower, transform.position, itemPower.transform.rotation);       //Power를 적 비행기위치의 자신의 회전 값으로 생성
+            else if (ran < 10)      //Boom이 나올 확률 10%
+                Instantiate(itemBoom, transform.position, itemBoom.transform.rotation);         //Boom을 적 비행기위치의 자신의 회전 값으로 생성
 
-            Destroy(gameObject);
+            Destroy(gameObject);        //적 비행기 오브젝트를 파괴
         }
     }
 

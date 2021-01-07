@@ -11,30 +11,30 @@ public class Player : MonoBehaviour
 {
     //플레이어 관련 변수
     public float speed;     //플레이어의 속도
-    public int life;
-    public int score;
+    public int life;        //플레이어의 목숨
+    public int score;       //플레이어의 점수
 
     //총알 관련 변수
-    public int power;     //총알의 파워
-    public int maxPower;
-    public int boom;
-    public int maxBoom;
+    public int power;       //총알의 파워
+    public int maxPower;    //총알의 최대 파워
+    public int boom;        //현재 갖고 있는 필살기 개수
+    public int maxBoom;     //최대 필살기 개수
     public float bulletSpeed;       //총알의 속도
     public float maxShotDelay;      //총알의 재장전 속도
     public float curShotDelay;      //현재 총알의 재장전 시간
 
     public GameObject bulletObjA;       //A타입 총알
     public GameObject bulletObjB;       //B타입 총알
-    public GameObject boomEffect;
+    public GameObject boomEffect;       //필살기 오브젝트
 
     //플레이어 경계 관련 변수
-    public bool isTouchTop;
-    public bool isTouchBottom;
-    public bool isTouchRight;
-    public bool isTouchLeft;
+    public bool isTouchTop;         //위쪽
+    public bool isTouchBottom;      //아래쪽
+    public bool isTouchRight;       //오른쪽
+    public bool isTouchLeft;        //왼쪽
 
-    public bool isHit;
-    public bool isBoomTime;
+    public bool isHit;          //플레이어가 총알에 맞았는지 판단하는 변수
+    public bool isBoomTime;     //필살기가 사용중인지 판단하는 변수
 
     public GameManager manager;     //GameManager 스크립트를 불러오는 변수
     Animator anim;      //Animator 컴포넌트 변수
@@ -50,7 +50,7 @@ public class Player : MonoBehaviour
     {
         Move();     //플레이어 이동 관련 함수
         Fire();     //총알 발사를 관리하는 함수
-        Boom();
+        Boom();     //필살기 발동 함수
         Reload();   //총알 재장전 관련 함수
     }
 
@@ -120,40 +120,45 @@ public class Player : MonoBehaviour
         curShotDelay += Time.deltaTime;     //현재 재장전 시간을 재기위해 curShotDelay에 프레임당 시간을 더해준다.
     }
 
+    //필살기를 발동하는 함수 Boom 선언
     void Boom()
     {
         //만약 Fire2버튼이 눌리지 않는다면 함수를 나간다.
         if (!Input.GetButton("Fire2"))
             return;
 
+        //만약 필살기가 발동 중이라면 함수를 나간다.
         if (isBoomTime)
             return;
 
+        //필살기를 모두 사용했다면 함수를 나간다.
         if (boom == 0)
             return;
 
-        boom--;
-        isBoomTime = true;
-        manager.UpdateBoomIcon(boom);
+        boom--;                             //필살기 개수 차감
+        isBoomTime = true;                  //필살기를 사용중
+        manager.UpdateBoomIcon(boom);       //필살기 UI 업데이트 
 
-        boomEffect.SetActive(true);
-        Invoke("OffBoomEffect", 4f);
-
+        boomEffect.SetActive(true);         //필살기 오브젝트를 활성화
+        Invoke("OffBoomEffect", 4f);        //4초 뒤에 필살기 오브젝트를 비활성화
+        
+        //씬에 올라와 있는 모든 적 비행기를 enemies에 초기화
         GameObject[] enemies = GameObject.FindGameObjectsWithTag("Enemy");
         for (int index = 0; index < enemies.Length; index++)
         {
-            Enemy enemyLogic = enemies[index].GetComponent<Enemy>();
-            enemyLogic.OnHit(1000);
+            Enemy enemyLogic = enemies[index].GetComponent<Enemy>();        //Enemy 스크립트를 가져와 enemyLogic에 초기화
+            enemyLogic.OnHit(1000);     //모든 적들에게 1000의 데미지를 가함(모두 파괴)
         }
 
+        //씬에 올라와 있는 모든 적 총알을 enemyBullets에 초기화
         GameObject[] enemyBullets = GameObject.FindGameObjectsWithTag("EnemyBullet");
         for (int index = 0; index < enemyBullets.Length; index++)
         {
-            Destroy(enemyBullets[index]);
+            Destroy(enemyBullets[index]);       //모든 적 총알 파괴
         }
     }
 
-    //Trigger Enter 충돌처리를 위한 함수 OnTriggerEnter2D 선언(경계 충돌, 적 충돌)
+    //Trigger Enter 충돌처리를 위한 함수 OnTriggerEnter2D 선언(경계 충돌, 적 충돌, 아이템 충돌)
     //Enter함수는 충돌했을 때 그 순간을 감지한다.
     void OnTriggerEnter2D(Collider2D collision)
     {
@@ -180,54 +185,59 @@ public class Player : MonoBehaviour
         //만약 충돌한 물체가 적 또는 적의 총알이면
         else if(collision.gameObject.tag == "Enemy" || collision.gameObject.tag == "EnemyBullet")
         {
+            //만약 이미 충돌했다면 충돌 함수를 나간다.
             if (isHit)
                 return;
 
-            isHit = true;
-            life--;
-            manager.UpdateLifeIcon(life);
+            isHit = true;       //지금은 충돌한 상태이다.
+            life--;             //플레이어의 목숨 차감
+            manager.UpdateLifeIcon(life);       //플레이어 목숨 UI 업데이트
 
+            //만약 목숨이 남지 않았다면
             if(life == 0)
-                manager.GameOver();
+                manager.GameOver();     //GameManager 스크립트의 GameOver 함수 호출
             else
-                manager.RespawnPlayer();        //GameManager안에 있는 RespawnPlayer함수 호출
+                manager.RespawnPlayer();        //GameManager안에 있는 RespawnPlayer 함수 호출
 
             gameObject.SetActive(false);    //player를 비활성화 상태로 만듬
-            Destroy(collision.gameObject);
+            Destroy(collision.gameObject);      //충돌한 적 또는 적의 총알 파괴
         }
+        //만약 충돌한 물체가 아이템이면
         else if(collision.gameObject.tag == "Item")
         {
-            Item item = collision.gameObject.GetComponent<Item>();
+            Item item = collision.gameObject.GetComponent<Item>();      //Item 스크립트를 사용하기위한 item 변수 선언
+            //Item의 type이 무엇인가
             switch (item.type)
             {
-                case "Coin":
+                case "Coin":        //Item의 type이 Coin이면 점수를 1000점 더한다.
                     score += 1000;
                     break;
-                case "Power":
-                    if(power == maxPower)
+                case "Power":       //Item의 type이 Power일때 최대 Power개수 보다 적으면 하나를 더하고 크면 점수를 500점 더한다.
+                    if (power == maxPower)
                         score += 500;
                     else
                         power++;
                     break;
-                case "Boom":
+                case "Boom":        //Item의 type이 Boom일때 최대 Boom개수 보다 적으면 하나를 더하고 크면 점수를 500점 더한다.
                     if (boom == maxBoom)
                         score += 500;
                     else
                     {
                         boom++;
-                        manager.UpdateBoomIcon(boom);
+                        manager.UpdateBoomIcon(boom);       //필살기 UI 업데이트
                     }
                     break;
             }
 
-            Destroy(collision.gameObject);
+            Destroy(collision.gameObject);      //충돌한 아이템 파괴
         }
     }
 
+    //필살기의 효과를 종료하는 함수 OffBoomEffect 선언
     void OffBoomEffect()
     {
-        boomEffect.SetActive(false);
-        isBoomTime = false;
+        boomEffect.SetActive(false);        //필살기의 효과를 끈다.
+        isBoomTime = false;                 //필살기가 사용 중이 아니다.
     }
 
     //Trigger Exit 충돌처리를 위한 함수 OnTriggerExit2D 선언(경계 충돌)
