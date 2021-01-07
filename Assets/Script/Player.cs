@@ -15,13 +15,17 @@ public class Player : MonoBehaviour
     public int score;
 
     //총알 관련 변수
-    public float power;     //총알의 파워
+    public int power;     //총알의 파워
+    public int maxPower;
+    public int boom;
+    public int maxBoom;
     public float bulletSpeed;       //총알의 속도
     public float maxShotDelay;      //총알의 재장전 속도
     public float curShotDelay;      //현재 총알의 재장전 시간
 
     public GameObject bulletObjA;       //A타입 총알
     public GameObject bulletObjB;       //B타입 총알
+    public GameObject boomEffect;
 
     //플레이어 경계 관련 변수
     public bool isTouchTop;
@@ -30,6 +34,7 @@ public class Player : MonoBehaviour
     public bool isTouchLeft;
 
     public bool isHit;
+    public bool isBoomTime;
 
     public GameManager manager;     //GameManager 스크립트를 불러오는 변수
     Animator anim;      //Animator 컴포넌트 변수
@@ -45,6 +50,7 @@ public class Player : MonoBehaviour
     {
         Move();     //플레이어 이동 관련 함수
         Fire();     //총알 발사를 관리하는 함수
+        Boom();
         Reload();   //총알 재장전 관련 함수
     }
 
@@ -114,6 +120,39 @@ public class Player : MonoBehaviour
         curShotDelay += Time.deltaTime;     //현재 재장전 시간을 재기위해 curShotDelay에 프레임당 시간을 더해준다.
     }
 
+    void Boom()
+    {
+        //만약 Fire2버튼이 눌리지 않는다면 함수를 나간다.
+        if (!Input.GetButton("Fire2"))
+            return;
+
+        if (isBoomTime)
+            return;
+
+        if (boom == 0)
+            return;
+
+        boom--;
+        isBoomTime = true;
+        manager.UpdateBoomIcon(boom);
+
+        boomEffect.SetActive(true);
+        Invoke("OffBoomEffect", 4f);
+
+        GameObject[] enemies = GameObject.FindGameObjectsWithTag("Enemy");
+        for (int index = 0; index < enemies.Length; index++)
+        {
+            Enemy enemyLogic = enemies[index].GetComponent<Enemy>();
+            enemyLogic.OnHit(1000);
+        }
+
+        GameObject[] enemyBullets = GameObject.FindGameObjectsWithTag("EnemyBullet");
+        for (int index = 0; index < enemyBullets.Length; index++)
+        {
+            Destroy(enemyBullets[index]);
+        }
+    }
+
     //Trigger Enter 충돌처리를 위한 함수 OnTriggerEnter2D 선언(경계 충돌, 적 충돌)
     //Enter함수는 충돌했을 때 그 순간을 감지한다.
     void OnTriggerEnter2D(Collider2D collision)
@@ -156,6 +195,39 @@ public class Player : MonoBehaviour
             gameObject.SetActive(false);    //player를 비활성화 상태로 만듬
             Destroy(collision.gameObject);
         }
+        else if(collision.gameObject.tag == "Item")
+        {
+            Item item = collision.gameObject.GetComponent<Item>();
+            switch (item.type)
+            {
+                case "Coin":
+                    score += 1000;
+                    break;
+                case "Power":
+                    if(power == maxPower)
+                        score += 500;
+                    else
+                        power++;
+                    break;
+                case "Boom":
+                    if (boom == maxBoom)
+                        score += 500;
+                    else
+                    {
+                        boom++;
+                        manager.UpdateBoomIcon(boom);
+                    }
+                    break;
+            }
+
+            Destroy(collision.gameObject);
+        }
+    }
+
+    void OffBoomEffect()
+    {
+        boomEffect.SetActive(false);
+        isBoomTime = false;
     }
 
     //Trigger Exit 충돌처리를 위한 함수 OnTriggerExit2D 선언(경계 충돌)

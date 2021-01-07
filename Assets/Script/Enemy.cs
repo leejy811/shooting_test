@@ -20,6 +20,9 @@ public class Enemy : MonoBehaviour
 
     public GameObject bulletObjA;       //A타입 총알
     public GameObject bulletObjB;       //B타입 총알
+    public GameObject itemCoin;
+    public GameObject itemPower;
+    public GameObject itemBoom;
     public GameObject player;           //플레이어 호출 변수
 
     public Sprite[] sprites;            //피격시 바꿀 스프라이트 변수
@@ -82,8 +85,11 @@ public class Enemy : MonoBehaviour
     }
 
     //적 비행기의 피격 이벤트 함수 선언
-    void OnHit(int damage)
+    public void OnHit(int damage)
     {
+        if (health <= 0)
+            return;
+
         health -= damage;   //체력이 데미지만큼 줄어든다.
         spriteRenderer.sprite = sprites[1];     //sprite가 피격 sprite로 변경됨
         Invoke("ReturnSprite", 0.1f);           //0.1초뒤에 원래대로의 sprite로 돌아옴
@@ -93,6 +99,17 @@ public class Enemy : MonoBehaviour
         {
             Player playerLogic = player.GetComponent<Player>();
             playerLogic.score += enemyScore;
+
+            int ran = Random.Range(0, 10);
+            if (ran < 5)
+                Debug.Log("Not Item");
+            else if (ran < 8)
+                Instantiate(itemCoin, transform.position, itemCoin.transform.rotation);
+            else if (ran < 9)
+                Instantiate(itemPower, transform.position, itemPower.transform.rotation);
+            else if (ran < 10)
+                Instantiate(itemBoom, transform.position, itemBoom.transform.rotation);
+
             Destroy(gameObject);
         }
     }

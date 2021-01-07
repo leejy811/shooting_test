@@ -18,6 +18,7 @@ public class GameManager : MonoBehaviour
     public GameObject player;       //player 오브젝트를 담을 변수
     public Text scoreText;
     public Image[] lifeImage;
+    public Image[] boomImage;
     public GameObject gameOverSet;
 
     //프레임당 한번 돌아가는 함수 Update 선언
@@ -76,6 +77,19 @@ public class GameManager : MonoBehaviour
         for (int index = 0; index < life; index++)
         {
             lifeImage[index].color = new Color(1, 1, 1, 1);
+        }
+    }
+
+    public void UpdateBoomIcon(int boom)
+    {
+        for (int index = 0; index < 3; index++)
+        {
+            boomImage[index].color = new Color(1, 1, 1, 0);
+        }
+
+        for (int index = 0; index < boom; index++)
+        {
+            boomImage[index].color = new Color(1, 1, 1, 1);
         }
     }
 
