@@ -12,6 +12,7 @@ public class Enemy : MonoBehaviour
     public string enemyName;    //적 비행기의 이름
     public float speed;         //적 비행기의 속도
     public int health;          //적 비행기의 체력
+    public int enemyScore;
 
     public float maxShotDelay;      //총알의 재장전 속도
     public float curShotDelay;      //현재 총알의 재장전 시간
@@ -89,7 +90,11 @@ public class Enemy : MonoBehaviour
         
         //만약 체력이 0보다 작거나 같으면 오브젝트 파괴
         if (health <= 0)
+        {
+            Player playerLogic = player.GetComponent<Player>();
+            playerLogic.score += enemyScore;
             Destroy(gameObject);
+        }
     }
 
     //원래의 sprite로 돌아오게 하는 함수 ReturnSprite 선언

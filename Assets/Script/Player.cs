@@ -11,6 +11,8 @@ public class Player : MonoBehaviour
 {
     //플레이어 관련 변수
     public float speed;     //플레이어의 속도
+    public int life;
+    public int score;
 
     //총알 관련 변수
     public float power;     //총알의 파워
@@ -26,6 +28,8 @@ public class Player : MonoBehaviour
     public bool isTouchBottom;
     public bool isTouchRight;
     public bool isTouchLeft;
+
+    public bool isHit;
 
     public GameManager manager;     //GameManager 스크립트를 불러오는 변수
     Animator anim;      //Animator 컴포넌트 변수
@@ -137,8 +141,20 @@ public class Player : MonoBehaviour
         //만약 충돌한 물체가 적 또는 적의 총알이면
         else if(collision.gameObject.tag == "Enemy" || collision.gameObject.tag == "EnemyBullet")
         {
-            manager.RespawnPlayer();        //GameManager안에 있는 RespawnPlayer함수 호출
+            if (isHit)
+                return;
+
+            isHit = true;
+            life--;
+            manager.UpdateLifeIcon(life);
+
+            if(life == 0)
+                manager.GameOver();
+            else
+                manager.RespawnPlayer();        //GameManager안에 있는 RespawnPlayer함수 호출
+
             gameObject.SetActive(false);    //player를 비활성화 상태로 만듬
+            Destroy(collision.gameObject);
         }
     }
 

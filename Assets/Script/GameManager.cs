@@ -1,4 +1,6 @@
 ﻿using UnityEngine;
+using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 
 /* GameManager Script
  * 이 스크립트는 게임의 전반적인 관리를 위한 스크립트입니다.
@@ -14,6 +16,9 @@ public class GameManager : MonoBehaviour
     public float curSpawnDelay;         //현재 측정한 재소환까지 시간
 
     public GameObject player;       //player 오브젝트를 담을 변수
+    public Text scoreText;
+    public Image[] lifeImage;
+    public GameObject gameOverSet;
 
     //프레임당 한번 돌아가는 함수 Update 선언
     void Update()
@@ -27,6 +32,9 @@ public class GameManager : MonoBehaviour
             maxSpawnDelay = Random.Range(0.5f, 3f);     //재소환까지 걸리는 시간을 0.5초에서 3초 사이의 랜덤 값으로 지정
             curSpawnDelay = 0;      //소환후 현재 측정하던 시간을 초기화
         }
+
+        Player playerLogic = player.GetComponent<Player>();
+        scoreText.text = string.Format("{0:n0}", playerLogic.score);
     }
 
     //enemy를 소환하는 함수 SpawnEnemy 선언
@@ -58,6 +66,29 @@ public class GameManager : MonoBehaviour
 
     }
 
+    public void UpdateLifeIcon(int life)
+    {
+        for (int index = 0; index < 3; index++)
+        {
+            lifeImage[index].color = new Color(1, 1, 1, 0);
+        }
+
+        for (int index = 0; index < life; index++)
+        {
+            lifeImage[index].color = new Color(1, 1, 1, 1);
+        }
+    }
+
+    public void GameOver()
+    {
+        gameOverSet.SetActive(true);
+    }
+
+    public void GameRetry()
+    {
+        SceneManager.LoadScene(0);
+    }
+
     //플레이어를 재소환하는 함수 RespawnPlayer 선언(재소환 함수 호출)
     public void RespawnPlayer()
     {
@@ -69,5 +100,8 @@ public class GameManager : MonoBehaviour
     {
         player.transform.position = Vector3.down * 3.5f;        //플레이어의 시작 위치 지정
         player.SetActive(true);         //플레이어를 다시 활성화
+
+        Player playerLogic = player.GetComponent<Player>();
+        playerLogic.isHit = false;
     }
 }

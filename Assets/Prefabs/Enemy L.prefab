@@ -147,6 +147,7 @@ MonoBehaviour:
   enemyName: L
   speed: 1
   health: 50
+  enemyScore: 500
   maxShotDelay: 4
   curShotDelay: 0
   bulletSpeed: 10

@@ -137,6 +137,7 @@ MonoBehaviour:
   enemyName: S
   speed: 3
   health: 3
+  enemyScore: 50
   maxShotDelay: 2
   curShotDelay: 0
   bulletSpeed: 10
