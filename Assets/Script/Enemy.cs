@@ -10,7 +10,7 @@ using UnityEngine;
 public class Enemy : MonoBehaviour
 {
     public string enemyName;    //적 비행기의 이름
-    public float speed;         //적 비행기의 속도
+    public float enemySpeed;    //적 비행기의 속도
     public int health;          //적 비행기의 체력
     public int enemyScore;      //적 비행기의 점수
 
@@ -24,6 +24,7 @@ public class Enemy : MonoBehaviour
     public GameObject itemPower;        //Power 아이템
     public GameObject itemBoom;         //Boom 아이템
     public GameObject player;           //플레이어 호출 변수
+    public ObjectManager objectManager;
 
     public Sprite[] sprites;            //피격시 바꿀 스프라이트 변수
     SpriteRenderer spriteRenderer;      //스프라이트를 바꾸기 위한 컴포넌트 변수
@@ -32,6 +33,22 @@ public class Enemy : MonoBehaviour
     void Awake()
     {
         spriteRenderer = GetComponent<SpriteRenderer>();    //spriteRenderer변수 초기화
+    }
+
+    void OnEnable()
+    {
+        switch (enemyName)
+        {
+            case "L":
+                health = 40;
+                break;
+            case "M":
+                health = 10;
+                break;
+            case "S":
+                health = 3;
+                break;
+        }
     }
 
     //프레임당 한번 돌아가는 함수 Update 선언
@@ -53,24 +70,25 @@ public class Enemy : MonoBehaviour
         if(enemyName == "S")
         {
             //A타입의 총알을 3의 속도로 하나만 발사
-            Shot(bulletObjA, 0f, 3f);
+            Shot("BulletEnemyA", 0f, 3f);
         }
         //만약 enemy가 큰 것이라면
         else if (enemyName == "L")
         {
             //B타입의 총알을 4의 속도로 두개 발사
-            Shot(bulletObjB, 0.3f, 4f);
-            Shot(bulletObjB, -0.3f, 4f);
+            Shot("BulletEnemyB", 0.3f, 4f);
+            Shot("BulletEnemyB", -0.3f, 4f);
         }
 
         curShotDelay = 0;       //발사후 현재 재장전 시간을 초기화
     }
 
     //총알을 발사하는 함수 Shot 선언 (bulletDistance가 양수면 오른쪽 음수면 왼쪽을 뜻함)
-    void Shot(GameObject bulletType, float bulletDistance, float bulletSpeed)
+    void Shot(string bulletType, float bulletDistance, float bulletSpeed)
     {
         //총알을 (총알타입, 생성위치, 생성회전)에 따라 생성한다.
-        GameObject bullet = Instantiate(bulletType, transform.position + Vector3.right * bulletDistance, transform.rotation);
+        GameObject bullet = objectManager.MakeObj(bulletType);
+        bullet.transform.position = transform.position + Vector3.right * bulletDistance;
         Rigidbody2D rigid = bullet.GetComponent<Rigidbody2D>();     //총알의 Rigidbody2D 컴포넌트를 가져와서 rigid 컴포넌트 변수로 선언
 
         //적에게서 플레이어를 가르키는 방향으로의 벡터 선언
@@ -104,15 +122,22 @@ public class Enemy : MonoBehaviour
             int ran = Random.Range(0, 10);      //아이템의 확률적 드랍을 위한 랜덤 int 변수 선언
             if (ran < 5)        //아이템이 나오지 않을 확률 50%
                 Debug.Log("Not Item");
-            else if (ran < 8)       //Coin이 나올 확률 30%
-                Instantiate(itemCoin, transform.position, itemCoin.transform.rotation);         //Coin을 적 비행기위치의 자신의 회전 값으로 생성
+            else if (ran < 8)//Coin이 나올 확률 30%
+                MakeItem("ItemCoin");
             else if (ran < 9)       //Power가 나올 확률 10%
-                Instantiate(itemPower, transform.position, itemPower.transform.rotation);       //Power를 적 비행기위치의 자신의 회전 값으로 생성
+                MakeItem("ItemPower");
             else if (ran < 10)      //Boom이 나올 확률 10%
-                Instantiate(itemBoom, transform.position, itemBoom.transform.rotation);         //Boom을 적 비행기위치의 자신의 회전 값으로 생성
+                MakeItem("ItemBoom");
 
-            Destroy(gameObject);        //적 비행기 오브젝트를 파괴
+            gameObject.SetActive(false);        //적 비행기 오브젝트를 파괴
+            transform.rotation = Quaternion.identity;
         }
+    }
+
+    void MakeItem(string itemType)
+    {
+        GameObject itemObj = objectManager.MakeObj(itemType);
+        itemObj.transform.position = transform.position;
     }
 
     //원래의 sprite로 돌아오게 하는 함수 ReturnSprite 선언
@@ -127,14 +152,17 @@ public class Enemy : MonoBehaviour
     {
         //만약 충돌한 물체가 경계라면 오브젝트 파괴
         if (collision.gameObject.tag == "BorderBullet")
-            Destroy(gameObject);
+        {
+            gameObject.SetActive(false);
+            transform.rotation = Quaternion.identity;
+        }
         //만약 충돌한 물체가 플레이어의 총알이라면
         else if (collision.gameObject.tag == "PlayerBullet")
         {
             Bullet bullet = collision.gameObject.GetComponent<Bullet>();    //Bullet 스크립트를 호출할 변수 bullet 선언
             OnHit(bullet.damage);       //피격함수에 bullet의 damage를 인수로 넣음
 
-            Destroy(bullet.gameObject);     //오브젝트에게 맞은 총알을 파괴
+            bullet.gameObject.SetActive(false);     //오브젝트에게 맞은 총알을 파괴
         }
     }
 }

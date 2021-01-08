@@ -9,7 +9,7 @@ using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
-    public GameObject[] enemyobjs;      //enemy 오브젝트들을 담을 배열 변수
+    public string[] enemyobjs;      //enemy 오브젝트들을 담을 배열 변수
     public Transform[] spawnPoints;     //소환할 위치를 담을 배열 변수
 
     public float maxSpawnDelay;         //재소환까지 걸리는 시간
@@ -20,6 +20,7 @@ public class GameManager : MonoBehaviour
     public Image[] lifeImage;           //플레이어의 남은 목숨을 담을 Image UI
     public Image[] boomImage;           //플레이어의 남은 필살기를 담을 Image UI
     public GameObject gameOverSet;      //게임이 오버되었을때 띄울 Text와 Button UI를 담은 빈 오브젝트
+    public ObjectManager objectManager;
 
     Player playerLogic;                 //Player 스크립트를 가져오기 위한 변수
 
@@ -27,6 +28,7 @@ public class GameManager : MonoBehaviour
     void Awake()
     {
         playerLogic = player.GetComponent<Player>();         //player 오브젝트 안에 Player 스크립트를 가져와 playerLogic을 초기화
+        enemyobjs = new string[] { "EnemyS", "EnemyM", "EnemyL" };
     }
 
     //프레임당 한번 돌아가는 함수 Update 선언
@@ -51,26 +53,29 @@ public class GameManager : MonoBehaviour
         int randomEnemy = Random.Range(0, 3);       //어느 종류의 enemy를 소환할지를 랜덤 값으로 초기화한 변수
         int randomPoint = Random.Range(0, 9);       //어디에 enemy를 소환할지를 랜덤 값으로 초기화한 변수
         //enemy를 (enemy타입, 생성위치, 생성회전)에 따라 소환한다.
-        GameObject enemy = Instantiate(enemyobjs[randomEnemy], spawnPoints[randomPoint].position, spawnPoints[randomPoint].rotation);
+        GameObject enemy = objectManager.MakeObj(enemyobjs[randomEnemy]);
+        enemy.transform.position = spawnPoints[randomPoint].position;
+
         Rigidbody2D rigid = enemy.GetComponent<Rigidbody2D>();      //enemy의 Rigidbody2D 컴포넌트를 가져올 rigid 변수 선언
         Enemy enemyLogic = enemy.GetComponent<Enemy>();             //enemy의 스크립트를 가져올 enemyLogic 변수 선언
         enemyLogic.player = player;         //Enemy 스크립트 안의 player를 GameManager에서 가져온 player로 지정해줌
+        enemyLogic.objectManager = objectManager;         //Enemy 스크립트 안의 player를 GameManager에서 가져온 player로 지정해줌
 
         //랜덤으로 생성하는 위치가 5번혹은 6번이라면(오른쪽)
         if (randomPoint == 5 || randomPoint == 6)
         {
             enemy.transform.Rotate(Vector3.back * 90);      //오른쪽에 맞춰 왼쪽을 바라보도록 회전
-            rigid.velocity = new Vector2(enemyLogic.speed * (-1), -1);      //왼쪽 아래로 가도록 속도 조정
+            rigid.velocity = new Vector2(enemyLogic.enemySpeed * (-1), -1);      //왼쪽 아래로 가도록 속도 조정
         }
         //랜덤으로 생성하는 위치가 7번혹은 8번이라면(왼쪽)
         else if (randomPoint == 7 || randomPoint == 8)
         {
             enemy.transform.Rotate(Vector3.forward * 90);   //왼쪽에 맞춰 오른쪽을 바라보도록 회전
-            rigid.velocity = new Vector2(enemyLogic.speed, -1);     //오른쪽 아래로 가도록 속도 조정
+            rigid.velocity = new Vector2(enemyLogic.enemySpeed, -1);     //오른쪽 아래로 가도록 속도 조정
         }
         //랜덤으로 생성하는 위치가 1~4번이라면(위쪽)
         else
-            rigid.velocity = new Vector2(0, enemyLogic.speed * (-1));       //아래쪽으로 가도록 속도 조정
+            rigid.velocity = new Vector2(0, enemyLogic.enemySpeed * (-1));       //아래쪽으로 가도록 속도 조정
 
     }
 

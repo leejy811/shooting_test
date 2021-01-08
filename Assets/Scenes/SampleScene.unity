@@ -1641,9 +1641,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   enemyobjs:
-  - {fileID: 6407185822929211631, guid: cc119d8e8975ddb418ca2b1de34653ea, type: 3}
-  - {fileID: 559163965251092326, guid: 90964206784d3274e87acfc136a737f3, type: 3}
-  - {fileID: 8297127426496747173, guid: add8eeda9bc7459449d4656c00e276ac, type: 3}
+  - 
+  - 
+  - 
   spawnPoints:
   - {fileID: 1805142227}
   - {fileID: 1501326965}
@@ -1667,6 +1667,7 @@ MonoBehaviour:
   - {fileID: 1100502215}
   - {fileID: 478941168}
   gameOverSet: {fileID: 1146902619}
+  objectManager: {fileID: 1819565625}
 --- !u!4 &1040821300
 Transform:
   m_ObjectHideFlags: 0
@@ -3046,6 +3047,69 @@ Transform:
   m_Father: {fileID: 773142166}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1819565624
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1819565626}
+  - component: {fileID: 1819565625}
+  m_Layer: 0
+  m_Name: Object Manager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1819565625
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1819565624}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fdd509c258846d3468d247ce4cc5e7b4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  enemyLPrefab: {fileID: 6407185822929211631, guid: cc119d8e8975ddb418ca2b1de34653ea,
+    type: 3}
+  enemyMPrefab: {fileID: 559163965251092326, guid: 90964206784d3274e87acfc136a737f3,
+    type: 3}
+  enemySPrefab: {fileID: 8297127426496747173, guid: add8eeda9bc7459449d4656c00e276ac,
+    type: 3}
+  itemCoinPrefab: {fileID: 4110418623120218733, guid: e96c122c5163b5b47a3b47d0e4e589a2,
+    type: 3}
+  itemPowerPrefab: {fileID: 3160264671469831961, guid: 68887fb419315a44cac6100cd214bce5,
+    type: 3}
+  itemBoomPrefab: {fileID: 5005529816410566898, guid: 0c479750f1f14e14fa159f25c06cc9d1,
+    type: 3}
+  bulletPlayerAPrefab: {fileID: 7242331393319682681, guid: c1f0b1c576a0c1943aedc33ce0a8a825,
+    type: 3}
+  bulletPlayerBPrefab: {fileID: 7166781989527760750, guid: ff03a38388440404d8b9a8d63c5c86e9,
+    type: 3}
+  bulletEnemyAPrefab: {fileID: 7166781989527760750, guid: bf0dab5eff41bcd4ab706f9d9b80d49b,
+    type: 3}
+  bulletEnemyBPrefab: {fileID: 7166781989527760750, guid: 4a7bfdd56e9d4464eae007ad5adb011d,
+    type: 3}
+--- !u!4 &1819565626
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1819565624}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.19622067, y: 0.5783571, z: -4.811598}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 12
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1872789620
 GameObject:
   m_ObjectHideFlags: 0
@@ -3279,17 +3343,13 @@ MonoBehaviour:
   speed: 3
   life: 3
   score: 0
-  power: 2
+  power: 3
   maxPower: 3
   boom: 0
   maxBoom: 3
   bulletSpeed: 10
   maxShotDelay: 0.15
   curShotDelay: 0
-  bulletObjA: {fileID: 7242331393319682681, guid: c1f0b1c576a0c1943aedc33ce0a8a825,
-    type: 3}
-  bulletObjB: {fileID: 7166781989527760750, guid: ff03a38388440404d8b9a8d63c5c86e9,
-    type: 3}
   boomEffect: {fileID: 1974089189}
   isTouchTop: 0
   isTouchBottom: 0
@@ -3297,7 +3357,8 @@ MonoBehaviour:
   isTouchLeft: 0
   isHit: 0
   isBoomTime: 0
-  manager: {fileID: 1040821299}
+  gameManager: {fileID: 1040821299}
+  objectManager: {fileID: 1819565625}
 --- !u!61 &1980291879
 BoxCollider2D:
   m_ObjectHideFlags: 0

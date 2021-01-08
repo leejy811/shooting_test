@@ -146,7 +146,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   type: Power
-  speed: 2
+  speed: 1.5
 --- !u!95 &3160264671469832035
 Animator:
   serializedVersion: 3

@@ -146,7 +146,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   type: Boom
-  speed: 2
+  speed: 1.5
 --- !u!95 &5005529816410566888
 Animator:
   serializedVersion: 3

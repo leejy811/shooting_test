@@ -15,7 +15,7 @@ public class Bullet : MonoBehaviour
     {
         if (collision.gameObject.tag == "BorderBullet")     //경계에 충돌했을 때
         {
-            Destroy(gameObject);    //총알을 제거한다.
+            gameObject.SetActive(false);    //총알을 제거한다.
         }
     }
 }

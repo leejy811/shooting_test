@@ -23,8 +23,6 @@ public class Player : MonoBehaviour
     public float maxShotDelay;      //총알의 재장전 속도
     public float curShotDelay;      //현재 총알의 재장전 시간
 
-    public GameObject bulletObjA;       //A타입 총알
-    public GameObject bulletObjB;       //B타입 총알
     public GameObject boomEffect;       //필살기 오브젝트
 
     //플레이어 경계 관련 변수
@@ -36,7 +34,8 @@ public class Player : MonoBehaviour
     public bool isHit;          //플레이어가 총알에 맞았는지 판단하는 변수
     public bool isBoomTime;     //필살기가 사용중인지 판단하는 변수
 
-    public GameManager manager;     //GameManager 스크립트를 불러오는 변수
+    public GameManager gameManager;     //GameManager 스크립트를 불러오는 변수
+    public ObjectManager objectManager;
     Animator anim;      //Animator 컴포넌트 변수
 
     //초기 변수 초기화를 위한 Awake함수 선언
@@ -89,16 +88,16 @@ public class Player : MonoBehaviour
         switch (power)
         {
             case 1:     //A타입 총알을 하나만 발사
-                Shot(bulletObjA, 0f);
+                Shot("BulletPlayerA", 0f);
                 break;
             case 2:     //A타입 총알 두개를 거리를 두고 발사
-                Shot(bulletObjA, 0.1f);
-                Shot(bulletObjA, -0.1f);
+                Shot("BulletPlayerA", 0.1f);
+                Shot("BulletPlayerA", -0.1f);
                 break;
             case 3:     //B타입 총알 한개와 양쪽에 A타입 총알 두개를 거리 두고 발사
-                Shot(bulletObjA, 0.35f);
-                Shot(bulletObjB, 0f);
-                Shot(bulletObjA, -0.35f);
+                Shot("BulletPlayerA", 0.35f);
+                Shot("BulletPlayerB", 0f);
+                Shot("BulletPlayerA", -0.35f);
                 break;
         }
 
@@ -106,10 +105,11 @@ public class Player : MonoBehaviour
     }
 
     //총알을 발사하는 함수 Shot 선언 (bulletDistance가 양수면 오른쪽 음수면 왼쪽을 뜻함)
-    void Shot(GameObject bulletType, float bulletDistance)
+    void Shot(string bulletType, float bulletDistance)
     {
         //총알을 (총알타입, 생성위치, 생성회전)에 따라 생성한다.
-        GameObject bullet = Instantiate(bulletType, transform.position + Vector3.right * bulletDistance, transform.rotation);
+        GameObject bullet = objectManager.MakeObj(bulletType);
+        bullet.transform.position = transform.position + Vector3.right * bulletDistance;
         Rigidbody2D rigid = bullet.GetComponent<Rigidbody2D>();     //총알의 Rigidbody2D 컴포넌트를 가져와서 rigid 컴포넌트 변수로 선언
         rigid.AddForce(Vector2.up * bulletSpeed, ForceMode2D.Impulse);      //총알을 위 방향으로 발사
     }
@@ -137,24 +137,38 @@ public class Player : MonoBehaviour
 
         boom--;                             //필살기 개수 차감
         isBoomTime = true;                  //필살기를 사용중
-        manager.UpdateBoomIcon(boom);       //필살기 UI 업데이트 
+        gameManager.UpdateBoomIcon(boom);       //필살기 UI 업데이트 
 
         boomEffect.SetActive(true);         //필살기 오브젝트를 활성화
         Invoke("OffBoomEffect", 4f);        //4초 뒤에 필살기 오브젝트를 비활성화
-        
-        //씬에 올라와 있는 모든 적 비행기를 enemies에 초기화
-        GameObject[] enemies = GameObject.FindGameObjectsWithTag("Enemy");
-        for (int index = 0; index < enemies.Length; index++)
-        {
-            Enemy enemyLogic = enemies[index].GetComponent<Enemy>();        //Enemy 스크립트를 가져와 enemyLogic에 초기화
-            enemyLogic.OnHit(1000);     //모든 적들에게 1000의 데미지를 가함(모두 파괴)
-        }
 
-        //씬에 올라와 있는 모든 적 총알을 enemyBullets에 초기화
-        GameObject[] enemyBullets = GameObject.FindGameObjectsWithTag("EnemyBullet");
-        for (int index = 0; index < enemyBullets.Length; index++)
+        DestoryEnemies("EnemyL");
+        DestoryEnemies("EnemyM");
+        DestoryEnemies("EnemyS");
+
+        DestoryEnemies("BulletEnemyA");
+        DestoryEnemies("BulletEnemyB");
+    }
+
+    void DestoryEnemies(string enemyType)
+    {
+        if (objectManager.GetPool(enemyType) == null)
+            return;
+
+        GameObject[] enemyObj = objectManager.GetPool(enemyType);
+
+        for (int index = 0; index < enemyObj.Length; index++)
         {
-            Destroy(enemyBullets[index]);       //모든 적 총알 파괴
+            if (enemyObj[index].activeSelf)
+            {
+                if (enemyType == "EnemyL" || enemyType == "EnemyL" || enemyType == "EnemyL")
+                {
+                    Enemy enemyLogic = enemyObj[index].GetComponent<Enemy>();        //Enemy 스크립트를 가져와 enemyLogic에 초기화
+                    enemyLogic.OnHit(1000);     //모든 적들에게 1000의 데미지를 가함(모두 파괴)
+                }
+                else
+                    enemyObj[index].SetActive(false);
+            }
         }
     }
 
@@ -191,16 +205,16 @@ public class Player : MonoBehaviour
 
             isHit = true;       //지금은 충돌한 상태이다.
             life--;             //플레이어의 목숨 차감
-            manager.UpdateLifeIcon(life);       //플레이어 목숨 UI 업데이트
+            gameManager.UpdateLifeIcon(life);       //플레이어 목숨 UI 업데이트
 
             //만약 목숨이 남지 않았다면
             if(life == 0)
-                manager.GameOver();     //GameManager 스크립트의 GameOver 함수 호출
+                gameManager.GameOver();     //GameManager 스크립트의 GameOver 함수 호출
             else
-                manager.RespawnPlayer();        //GameManager안에 있는 RespawnPlayer 함수 호출
+                gameManager.RespawnPlayer();        //GameManager안에 있는 RespawnPlayer 함수 호출
 
             gameObject.SetActive(false);    //player를 비활성화 상태로 만듬
-            Destroy(collision.gameObject);      //충돌한 적 또는 적의 총알 파괴
+            collision.gameObject.SetActive(false);      //충돌한 적 또는 적의 총알 파괴
         }
         //만약 충돌한 물체가 아이템이면
         else if(collision.gameObject.tag == "Item")
@@ -224,12 +238,12 @@ public class Player : MonoBehaviour
                     else
                     {
                         boom++;
-                        manager.UpdateBoomIcon(boom);       //필살기 UI 업데이트
+                        gameManager.UpdateBoomIcon(boom);       //필살기 UI 업데이트
                     }
                     break;
             }
 
-            Destroy(collision.gameObject);      //충돌한 아이템 파괴
+            collision.gameObject.SetActive(false);      //충돌한 아이템 파괴
         }
     }
 

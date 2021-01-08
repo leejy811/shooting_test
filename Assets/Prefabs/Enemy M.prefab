@@ -156,7 +156,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   enemyName: M
-  speed: 10
+  enemySpeed: 10
+  itemSpeed: 1.5
   health: 15
   enemyScore: 200
   maxShotDelay: 0
@@ -173,6 +174,7 @@ MonoBehaviour:
   itemBoom: {fileID: 5005529816410566898, guid: 0c479750f1f14e14fa159f25c06cc9d1,
     type: 3}
   player: {fileID: 0}
+  objectManager: {fileID: 0}
   sprites:
   - {fileID: -7642239419928554605, guid: 7b1cb72d6e974b340918752780131518, type: 3}
   - {fileID: -7911572535675539837, guid: 7b1cb72d6e974b340918752780131518, type: 3}
