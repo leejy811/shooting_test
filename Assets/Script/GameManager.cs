@@ -1,6 +1,9 @@
-﻿using UnityEngine;
+﻿using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
+using System.IO;
 
 /* GameManager Script
  * 이 스크립트는 게임의 전반적인 관리를 위한 스크립트입니다.
@@ -12,7 +15,7 @@ public class GameManager : MonoBehaviour
     public string[] enemyobjs;      //enemy 오브젝트들을 담을 배열 변수
     public Transform[] spawnPoints;     //소환할 위치를 담을 배열 변수
 
-    public float maxSpawnDelay;         //재소환까지 걸리는 시간
+    public float nextSpawnDelay;         //재소환까지 걸리는 시간
     public float curSpawnDelay;         //현재 측정한 재소환까지 시간
 
     public GameObject player;           //player 오브젝트를 담을 변수
@@ -24,11 +27,45 @@ public class GameManager : MonoBehaviour
 
     Player playerLogic;                 //Player 스크립트를 가져오기 위한 변수
 
+    public List<Spawn> spawnList;
+    public int spawnIndex;
+    public bool spawnEnd;
+
     //초기 변수 초기화를 위한 Awake함수 선언
     void Awake()
     {
+        spawnList = new List<Spawn>();
         playerLogic = player.GetComponent<Player>();         //player 오브젝트 안에 Player 스크립트를 가져와 playerLogic을 초기화
         enemyobjs = new string[] { "EnemyS", "EnemyM", "EnemyL" };
+        ReadSpawnFile();
+    }
+
+    void ReadSpawnFile()
+    {
+        spawnList.Clear();
+        spawnIndex = 0;
+        spawnEnd = false;
+
+        TextAsset textFile = Resources.Load("Stage0") as TextAsset;
+        StringReader stringReader = new StringReader(textFile.text);
+
+        while(stringReader != null)
+        {
+            string line = stringReader.ReadLine();
+
+            if (line == null)
+                break;
+
+            Spawn spawnData = new Spawn();
+            spawnData.delay = float.Parse(line.Split(',')[0]);
+            spawnData.type = line.Split(',')[1];
+            spawnData.point = int.Parse(line.Split(',')[2]);
+            spawnList.Add(spawnData);
+        }
+
+        stringReader.Close();
+
+        nextSpawnDelay = spawnList[0].delay;
     }
 
     //프레임당 한번 돌아가는 함수 Update 선언
@@ -37,10 +74,9 @@ public class GameManager : MonoBehaviour
         curSpawnDelay += Time.deltaTime;    //시간을 측정하기 위해 curSpawnDelay에 deltaTime을 더해줌
 
         //만약 현재까지 측장한 시간이 재소환까지 걸리는 시간보다 길면
-        if (curSpawnDelay > maxSpawnDelay)
+        if (curSpawnDelay > nextSpawnDelay && !spawnEnd)
         {
             SpawnEnemy();       //enemy를 소환하는 함수 호출
-            maxSpawnDelay = Random.Range(0.5f, 3f);     //재소환까지 걸리는 시간을 0.5초에서 3초 사이의 랜덤 값으로 지정
             curSpawnDelay = 0;      //소환후 현재 측정하던 시간을 초기화
         }
 
@@ -50,11 +86,24 @@ public class GameManager : MonoBehaviour
     //enemy를 소환하는 함수 SpawnEnemy 선언
     void SpawnEnemy()
     {
-        int randomEnemy = Random.Range(0, 3);       //어느 종류의 enemy를 소환할지를 랜덤 값으로 초기화한 변수
-        int randomPoint = Random.Range(0, 9);       //어디에 enemy를 소환할지를 랜덤 값으로 초기화한 변수
+        int enemyIndex = 0;
+        switch (spawnList[spawnIndex].type)
+        {
+            case "S":
+                enemyIndex = 0;
+                break;
+            case "M":
+                enemyIndex = 1;
+                break;
+            case "L":
+                enemyIndex = 2;
+                break;
+        }
+        int enemyPoint = spawnList[spawnIndex].point;
+
         //enemy를 (enemy타입, 생성위치, 생성회전)에 따라 소환한다.
-        GameObject enemy = objectManager.MakeObj(enemyobjs[randomEnemy]);
-        enemy.transform.position = spawnPoints[randomPoint].position;
+        GameObject enemy = objectManager.MakeObj(enemyobjs[enemyIndex]);
+        enemy.transform.position = spawnPoints[enemyPoint].position;
 
         Rigidbody2D rigid = enemy.GetComponent<Rigidbody2D>();      //enemy의 Rigidbody2D 컴포넌트를 가져올 rigid 변수 선언
         Enemy enemyLogic = enemy.GetComponent<Enemy>();             //enemy의 스크립트를 가져올 enemyLogic 변수 선언
@@ -62,13 +111,13 @@ public class GameManager : MonoBehaviour
         enemyLogic.objectManager = objectManager;         //Enemy 스크립트 안의 player를 GameManager에서 가져온 player로 지정해줌
 
         //랜덤으로 생성하는 위치가 5번혹은 6번이라면(오른쪽)
-        if (randomPoint == 5 || randomPoint == 6)
+        if (enemyPoint == 5 || enemyPoint == 6)
         {
             enemy.transform.Rotate(Vector3.back * 90);      //오른쪽에 맞춰 왼쪽을 바라보도록 회전
             rigid.velocity = new Vector2(enemyLogic.enemySpeed * (-1), -1);      //왼쪽 아래로 가도록 속도 조정
         }
         //랜덤으로 생성하는 위치가 7번혹은 8번이라면(왼쪽)
-        else if (randomPoint == 7 || randomPoint == 8)
+        else if (enemyPoint == 7 || enemyPoint == 8)
         {
             enemy.transform.Rotate(Vector3.forward * 90);   //왼쪽에 맞춰 오른쪽을 바라보도록 회전
             rigid.velocity = new Vector2(enemyLogic.enemySpeed, -1);     //오른쪽 아래로 가도록 속도 조정
@@ -77,6 +126,14 @@ public class GameManager : MonoBehaviour
         else
             rigid.velocity = new Vector2(0, enemyLogic.enemySpeed * (-1));       //아래쪽으로 가도록 속도 조정
 
+        spawnIndex++;
+        if(spawnIndex == spawnList.Count)
+        {
+            spawnEnd = true;
+            return;
+        }
+
+        nextSpawnDelay = spawnList[spawnIndex].delay;
     }
 
     /*플레이어의 남은 목숨을 표시해주는 lifeImage를 
