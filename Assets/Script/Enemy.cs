@@ -16,7 +16,6 @@ public class Enemy : MonoBehaviour
 
     public float maxShotDelay;      //총알의 재장전 속도
     public float curShotDelay;      //현재 총알의 재장전 시간
-    public float bulletSpeed;       //총알의 속도
 
     public GameObject bulletObjA;       //A타입 총알
     public GameObject bulletObjB;       //B타입 총알
@@ -28,17 +27,32 @@ public class Enemy : MonoBehaviour
 
     public Sprite[] sprites;            //피격시 바꿀 스프라이트 변수
     SpriteRenderer spriteRenderer;      //스프라이트를 바꾸기 위한 컴포넌트 변수
+    Animator anim;
+
+    public int patternIndex;
+    public int curPatternCount;
+    public int[] maxPatternCount;
+
+    int index;
+    int roundNum;
 
     //초기 변수 초기화를 위한 Awake함수 선언
     void Awake()
     {
         spriteRenderer = GetComponent<SpriteRenderer>();    //spriteRenderer변수 초기화
+
+        if (enemyName == "B")
+            anim = GetComponent<Animator>();
     }
 
     void OnEnable()
     {
         switch (enemyName)
         {
+            case "B":
+                health = 3000;
+                Invoke("Stop", 2f);
+                break;
             case "L":
                 health = 40;
                 break;
@@ -51,9 +65,102 @@ public class Enemy : MonoBehaviour
         }
     }
 
+    void Stop()
+    {
+        if (!gameObject.activeSelf)
+            return;
+
+        Rigidbody2D rigid = GetComponent<Rigidbody2D>();
+        rigid.velocity = Vector2.zero;
+
+        Invoke("Think", 2);
+    }
+
+    void Think()
+    {
+        patternIndex = patternIndex == 3 ? 0 : patternIndex + 1;
+        curPatternCount = 0;
+
+        switch (patternIndex)
+        {
+            case 0:
+                FireFoward();
+                break;
+            case 1:
+                FireShot();
+                break;
+            case 2:
+                FireArc();
+                break;
+            case 3:
+                FireAround();
+                break;
+        }
+    }
+
+    void FireFoward()
+    {
+        Shot("BulletBossA", 0.3f, 8f);
+        Shot("BulletBossA", 0.45f, 8f);
+        Shot("BulletBossA", -0.3f, 8f);
+        Shot("BulletBossA", -0.45f, 8f);
+
+        curPatternCount++;
+
+        if (curPatternCount < maxPatternCount[patternIndex])
+            Invoke("FireFoward", 2);
+        else
+            Invoke("Think", 3);
+    }
+
+    void FireShot()
+    {
+        for (index = 0; index < 5; index++)
+            Shot("BulletEnemyB", 0f, 3f);
+
+        curPatternCount++;
+
+        if (curPatternCount < maxPatternCount[patternIndex])
+            Invoke("FireShot", 3.5f);
+        else
+            Invoke("Think", 3);
+    }
+
+    void FireArc()
+    {
+        Shot("BulletEnemyA", 0f, 5f);
+
+        curPatternCount++;
+
+        if (curPatternCount < maxPatternCount[patternIndex])
+            Invoke("FireArc", 0.15f);
+        else
+            Invoke("Think", 3);
+    }
+
+    void FireAround()
+    {
+        int roundNumA = 50;
+        int roundNumB = 40;
+        roundNum = curPatternCount % 2 == 0 ? roundNumA : roundNumB;
+
+        for (index = 0; index < roundNumA; index++)
+            Shot("BulletBossB", 0f, 2f);
+
+        curPatternCount++;
+
+        if (curPatternCount < maxPatternCount[patternIndex])
+            Invoke("FireAround", 0.7f);
+        else
+            Invoke("Think", 3);
+    }
+
     //프레임당 한번 돌아가는 함수 Update 선언
     void Update()
     {
+        if (enemyName == "B")
+            return;
+
         Fire();     //총알 발사를 관리하는 함수
         Reload();   //총알 재장전 관련 함수
     }
@@ -86,14 +193,46 @@ public class Enemy : MonoBehaviour
     //총알을 발사하는 함수 Shot 선언 (bulletDistance가 양수면 오른쪽 음수면 왼쪽을 뜻함)
     void Shot(string bulletType, float bulletDistance, float bulletSpeed)
     {
-        //총알을 (총알타입, 생성위치, 생성회전)에 따라 생성한다.
         GameObject bullet = objectManager.MakeObj(bulletType);
         bullet.transform.position = transform.position + Vector3.right * bulletDistance;
+
         Rigidbody2D rigid = bullet.GetComponent<Rigidbody2D>();     //총알의 Rigidbody2D 컴포넌트를 가져와서 rigid 컴포넌트 변수로 선언
 
-        //적에게서 플레이어를 가르키는 방향으로의 벡터 선언
-        Vector3 dirVec = player.transform.position - (transform.position + Vector3.right * bulletDistance);
-        rigid.AddForce(dirVec.normalized * bulletSpeed, ForceMode2D.Impulse);      //총알을 플레이어를 가르키는 방향으로 발사 (이때, 단위 벡터로의 변환이 필요)
+        if(enemyName == "B")
+        {
+            switch (patternIndex)
+            {
+                case 0:     //FireFoward
+                    rigid.AddForce(Vector2.down * bulletSpeed, ForceMode2D.Impulse);
+                    break;
+                case 1:     //FireShot
+                    //적에게서 플레이어를 가르키는 방향으로의 벡터 선언
+                    Vector2 dirVec1 = player.transform.position - transform.position;
+                    Vector2 ranVec = new Vector2(Random.Range(-0.5f, 0.5f), Random.Range(0f, 2f));
+                    dirVec1 += ranVec;
+                    rigid.AddForce(dirVec1.normalized * bulletSpeed, ForceMode2D.Impulse);     //총알을 플레이어를 가르키는 방향으로 발사 (이때, 단위 벡터로의 변환이 필요)
+                    break;
+                case 2:     //FireArc
+                    bullet.transform.rotation = Quaternion.identity;
+                    Vector2 dirVec2 = new Vector2(Mathf.Cos(Mathf.PI * 10 * curPatternCount/maxPatternCount[patternIndex]), -1);
+                    rigid.AddForce(dirVec2.normalized * bulletSpeed, ForceMode2D.Impulse);     //총알을 플레이어를 가르키는 방향으로 발사 (이때, 단위 벡터로의 변환이 필요)
+                    break;
+                case 3:
+                    bullet.transform.rotation = Quaternion.identity;
+                    Vector2 dirVec3 = new Vector2(Mathf.Cos(Mathf.PI * 2 * index / roundNum), Mathf.Sin(Mathf.PI * 2 * index / roundNum));
+                    rigid.AddForce(dirVec3.normalized * bulletSpeed, ForceMode2D.Impulse);     //총알을 플레이어를 가르키는 방향으로 발사 (이때, 단위 벡터로의 변환이 필요)
+
+                    Vector3 rotVec = Vector3.forward * 360 * index / roundNum + Vector3.forward * 90;
+                    bullet.transform.Rotate(rotVec);
+                    break;
+            }
+        }
+        else
+        {
+            //적에게서 플레이어를 가르키는 방향으로의 벡터 선언
+            Vector3 dirVec = player.transform.position - (transform.position + Vector3.right * bulletDistance);
+            rigid.AddForce(dirVec.normalized * bulletSpeed, ForceMode2D.Impulse);      //총알을 플레이어를 가르키는 방향으로 발사 (이때, 단위 벡터로의 변환이 필요)
+        }
     }
 
     //총알 재장전 관련 함수 Reload 선언
@@ -110,8 +249,16 @@ public class Enemy : MonoBehaviour
             return;
 
         health -= damage;   //체력이 데미지만큼 줄어든다.
-        spriteRenderer.sprite = sprites[1];     //sprite가 피격 sprite로 변경됨
-        Invoke("ReturnSprite", 0.1f);           //0.1초뒤에 원래대로의 sprite로 돌아옴
+
+        if(enemyName == "B")
+        {
+            anim.SetTrigger("OnHit");
+        }
+        else
+        {
+            spriteRenderer.sprite = sprites[1];     //sprite가 피격 sprite로 변경됨
+            Invoke("ReturnSprite", 0.1f);           //0.1초뒤에 원래대로의 sprite로 돌아옴
+        }
         
         //만약 체력이 0보다 작거나 같으면 오브젝트 파괴
         if (health <= 0)
@@ -119,7 +266,7 @@ public class Enemy : MonoBehaviour
             Player playerLogic = player.GetComponent<Player>();     //Player 스크립트를 가져오기 위한 playerLogic변수 선언
             playerLogic.score += enemyScore;        //적 비행기의 타입별 점수를 Player의 점수에 더함
 
-            int ran = Random.Range(0, 10);      //아이템의 확률적 드랍을 위한 랜덤 int 변수 선언
+            int ran = enemyName == "B" ? 0 : Random.Range(0, 10);      //아이템의 확률적 드랍을 위한 랜덤 int 변수 선언
             if (ran < 5)        //아이템이 나오지 않을 확률 50%
                 Debug.Log("Not Item");
             else if (ran < 8)//Coin이 나올 확률 30%
@@ -151,7 +298,7 @@ public class Enemy : MonoBehaviour
     void OnTriggerEnter2D(Collider2D collision)
     {
         //만약 충돌한 물체가 경계라면 오브젝트 파괴
-        if (collision.gameObject.tag == "BorderBullet")
+        if (collision.gameObject.tag == "BorderBullet" && enemyName != "B")
         {
             gameObject.SetActive(false);
             transform.rotation = Quaternion.identity;

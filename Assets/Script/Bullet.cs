@@ -9,6 +9,13 @@ using UnityEngine;
 public class Bullet : MonoBehaviour
 {
     public int damage;      //총알의 데미지
+    public bool isRotate;
+
+    void Update()
+    {
+        if (isRotate)
+            transform.Rotate(Vector3.forward * 10);
+    }
 
     //Trigger Enter 충돌처리를 위한 함수 OnTriggerEnter2D 선언(경계 충돌)
     void OnTriggerEnter2D(Collider2D collision)

@@ -36,7 +36,7 @@ public class GameManager : MonoBehaviour
     {
         spawnList = new List<Spawn>();
         playerLogic = player.GetComponent<Player>();         //player 오브젝트 안에 Player 스크립트를 가져와 playerLogic을 초기화
-        enemyobjs = new string[] { "EnemyS", "EnemyM", "EnemyL" };
+        enemyobjs = new string[] { "EnemyS", "EnemyM", "EnemyL", "EnemyB" };
         ReadSpawnFile();
     }
 
@@ -97,6 +97,9 @@ public class GameManager : MonoBehaviour
                 break;
             case "L":
                 enemyIndex = 2;
+                break;
+            case "B":
+                enemyIndex = 3;
                 break;
         }
         int enemyPoint = spawnList[spawnIndex].point;

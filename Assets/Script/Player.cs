@@ -36,6 +36,8 @@ public class Player : MonoBehaviour
 
     public GameManager gameManager;     //GameManager 스크립트를 불러오는 변수
     public ObjectManager objectManager;
+
+    public GameObject[] followers;
     Animator anim;      //Animator 컴포넌트 변수
 
     //초기 변수 초기화를 위한 Awake함수 선언
@@ -94,7 +96,7 @@ public class Player : MonoBehaviour
                 Shot("BulletPlayerA", 0.1f);
                 Shot("BulletPlayerA", -0.1f);
                 break;
-            case 3:     //B타입 총알 한개와 양쪽에 A타입 총알 두개를 거리 두고 발사
+            default:     //B타입 총알 한개와 양쪽에 A타입 총알 두개를 거리 두고 발사
                 Shot("BulletPlayerA", 0.35f);
                 Shot("BulletPlayerB", 0f);
                 Shot("BulletPlayerA", -0.35f);
@@ -230,7 +232,10 @@ public class Player : MonoBehaviour
                     if (power == maxPower)
                         score += 500;
                     else
+                    {
                         power++;
+                        AddFollower();                    
+                    }
                     break;
                 case "Boom":        //Item의 type이 Boom일때 최대 Boom개수 보다 적으면 하나를 더하고 크면 점수를 500점 더한다.
                     if (boom == maxBoom)
@@ -245,6 +250,16 @@ public class Player : MonoBehaviour
 
             collision.gameObject.SetActive(false);      //충돌한 아이템 파괴
         }
+    }
+
+    void AddFollower()
+    {
+        if(power == 4)
+            followers[0].SetActive(true);
+        else if(power == 5)
+            followers[1].SetActive(true);
+        else if (power == 6)
+            followers[2].SetActive(true);
     }
 
     //필살기의 효과를 종료하는 함수 OffBoomEffect 선언
