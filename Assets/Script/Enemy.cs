@@ -24,6 +24,7 @@ public class Enemy : MonoBehaviour
     public GameObject itemBoom;         //Boom 아이템
     public GameObject player;           //플레이어 호출 변수
     public ObjectManager objectManager;
+    public GameManager gameManager;
 
     public Sprite[] sprites;            //피격시 바꿀 스프라이트 변수
     SpriteRenderer spriteRenderer;      //스프라이트를 바꾸기 위한 컴포넌트 변수
@@ -278,6 +279,10 @@ public class Enemy : MonoBehaviour
 
             gameObject.SetActive(false);        //적 비행기 오브젝트를 파괴
             transform.rotation = Quaternion.identity;
+            gameManager.callExplosion(transform.position, enemyName);
+
+            if (enemyName == "B")
+                gameManager.StageEnd();
         }
     }
 

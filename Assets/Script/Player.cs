@@ -38,12 +38,48 @@ public class Player : MonoBehaviour
     public ObjectManager objectManager;
 
     public GameObject[] followers;
+
+    public bool isRespawnTime;
+
+    public bool[] joyControl;
+    public bool isControl;
+    public bool isButtonA;
+    public bool isButtonB;
+
     Animator anim;      //Animator 컴포넌트 변수
+    SpriteRenderer spriteRenderer;
 
     //초기 변수 초기화를 위한 Awake함수 선언
     void Awake()
     {
         anim = GetComponent<Animator>();    //Animator 컴포넌트 변수 초기화
+        spriteRenderer = GetComponent<SpriteRenderer>();
+    }
+
+    void OnEnable()
+    {
+        Unbeatable();
+        Invoke("Unbeatable", 3);
+    }
+
+    void Unbeatable()
+    {
+        isRespawnTime = !isRespawnTime;
+
+        if (isRespawnTime)
+        {
+            spriteRenderer.color = new Color(1, 1, 1, 0.5f);
+            
+            for(int index = 0;index < followers.Length; index++)
+                followers[index].GetComponent<SpriteRenderer>().color = new Color(1, 1, 1, 0.5f);
+        }
+        else
+        {
+            spriteRenderer.color = new Color(1, 1, 1, 1);
+
+            for (int index = 0; index < followers.Length; index++)
+                followers[index].GetComponent<SpriteRenderer>().color = new Color(1, 1, 1, 1);
+        }
     }
 
     //프레임당 한번 돌아가는 함수 Update 선언
@@ -55,15 +91,45 @@ public class Player : MonoBehaviour
         Reload();   //총알 재장전 관련 함수
     }
 
+    public void JoyPanel(int type)
+    {
+        for(int index = 0; index < 9; index++)
+        {
+            joyControl[index] = index == type;
+        }
+    }
+
+    public void JoyDown()
+    {
+        isControl = true;
+    }
+
+    public void JoyUp()
+    {
+        isControl = false;
+    }
+
     //플레이어 이동 관련 함수 Move 선언
     void Move()
     {
+        //키보드 컨트롤
         float h = Input.GetAxisRaw("Horizontal");   //좌우 입력을 받는 변수 h를 GetAxisRaw로 초기화
-        if ((isTouchRight && h == 1) || (isTouchLeft && h == -1))   //경계의 부딪힌 상태에서 그 방향으로 움직이려 하면
-            h = 0;  //입력 변수 h를 0으로 초기화
-
         float v = Input.GetAxisRaw("Vertical");     //상하 입력을 받는 변수 v를 GetAxisRaw로 초기화
-        if ((isTouchTop && v == 1) || (isTouchBottom && v == -1))   //경계의 부딪힌 상태에서 그 방향으로 움직이려 하면
+
+        //조이 판넬 컨트롤
+        if (joyControl[0]) { h = -1; v = 1; }
+        if (joyControl[1]) { h = 0; v = 1; }
+        if (joyControl[2]) { h = 1; v = 1; }
+        if (joyControl[3]) { h = -1; v = 0; }
+        if (joyControl[4]) { h = 0; v = 0; }
+        if (joyControl[5]) { h = 1; v = 0; }
+        if (joyControl[6]) { h = -1; v = -1; }
+        if (joyControl[7]) { h = 0; v = -1; }
+        if (joyControl[8]) { h = 1; v = -1; }
+
+        if ((isTouchRight && h == 1) || (isTouchLeft && h == -1) || !isControl)   //경계의 부딪힌 상태에서 그 방향으로 움직이려 하면
+            h = 0;  //입력 변수 h를 0으로 초기화
+        if ((isTouchTop && v == 1) || (isTouchBottom && v == -1) || !isControl)   //경계의 부딪힌 상태에서 그 방향으로 움직이려 하면
             v = 0;  //입력 변수 v를 0으로 초기화
 
         Vector3 curPos = transform.position;    //플레이어의 현재위치를 curPos로 초기화
@@ -75,11 +141,29 @@ public class Player : MonoBehaviour
             anim.SetInteger("Input", (int)h);   //Animator의 int형 parameter인 Input을 h로 초기화
     }
 
+    public void ButtonADown()
+    {
+        isButtonA = true;
+    }
+
+    public void ButtonAUp()
+    {
+        isButtonA = false;
+    }
+
+    public void ButtonBDown()
+    {
+        isButtonB = true;
+    }
+
     //총알 발사를 관리하는 함수 Fire 선언
     void Fire()
     {
         //만약 Fire1버튼이 눌리지 않는다면 함수를 나간다.
-        if (!Input.GetButton("Fire1"))
+        //if (!Input.GetButton("Fire1"))
+        //    return;
+
+        if (!isButtonA)
             return;
 
         //현재 재장전 시간이 최대 재장전 시간보다 낮다면 함수를 나간다.
@@ -126,7 +210,10 @@ public class Player : MonoBehaviour
     void Boom()
     {
         //만약 Fire2버튼이 눌리지 않는다면 함수를 나간다.
-        if (!Input.GetButton("Fire2"))
+        //if (!Input.GetButton("Fire2"))
+        //    return;
+
+        if (!isButtonB)
             return;
 
         //만약 필살기가 발동 중이라면 함수를 나간다.
@@ -201,6 +288,9 @@ public class Player : MonoBehaviour
         //만약 충돌한 물체가 적 또는 적의 총알이면
         else if(collision.gameObject.tag == "Enemy" || collision.gameObject.tag == "EnemyBullet")
         {
+            if (isRespawnTime)
+                return;
+
             //만약 이미 충돌했다면 충돌 함수를 나간다.
             if (isHit)
                 return;
@@ -208,9 +298,10 @@ public class Player : MonoBehaviour
             isHit = true;       //지금은 충돌한 상태이다.
             life--;             //플레이어의 목숨 차감
             gameManager.UpdateLifeIcon(life);       //플레이어 목숨 UI 업데이트
+            gameManager.callExplosion(transform.position, "P");
 
             //만약 목숨이 남지 않았다면
-            if(life == 0)
+            if (life == 0)
                 gameManager.GameOver();     //GameManager 스크립트의 GameOver 함수 호출
             else
                 gameManager.RespawnPlayer();        //GameManager안에 있는 RespawnPlayer 함수 호출

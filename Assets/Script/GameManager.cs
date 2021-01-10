@@ -12,6 +12,12 @@ using System.IO;
 
 public class GameManager : MonoBehaviour
 {
+    public int stage;
+    public Animator stageAnim;
+    public Animator clearAnim;
+    public Animator fadeAnim;
+    public Transform playerPos;
+
     public string[] enemyobjs;      //enemy 오브젝트들을 담을 배열 변수
     public Transform[] spawnPoints;     //소환할 위치를 담을 배열 변수
 
@@ -37,7 +43,33 @@ public class GameManager : MonoBehaviour
         spawnList = new List<Spawn>();
         playerLogic = player.GetComponent<Player>();         //player 오브젝트 안에 Player 스크립트를 가져와 playerLogic을 초기화
         enemyobjs = new string[] { "EnemyS", "EnemyM", "EnemyL", "EnemyB" };
+        StageStart();
+    }
+
+    public void StageStart()
+    {
+        stageAnim.SetTrigger("On");
+        stageAnim.GetComponent<Text>().text = "STAGE " + stage + "\nStart";
+        clearAnim.GetComponent<Text>().text = "STAGE " + stage + "\nClear!!";
+
         ReadSpawnFile();
+
+        fadeAnim.SetTrigger("In");
+    }
+
+    public void StageEnd()
+    {
+        clearAnim.SetTrigger("On");
+
+        fadeAnim.SetTrigger("Out");
+
+        player.transform.position = playerPos.position;
+
+        stage++;
+        if (stage < 2)
+            Invoke("GameOver", 6);
+        else
+            Invoke("StageStart", 5);
     }
 
     void ReadSpawnFile()
@@ -46,7 +78,7 @@ public class GameManager : MonoBehaviour
         spawnIndex = 0;
         spawnEnd = false;
 
-        TextAsset textFile = Resources.Load("Stage0") as TextAsset;
+        TextAsset textFile = Resources.Load("Stage" + stage) as TextAsset;
         StringReader stringReader = new StringReader(textFile.text);
 
         while(stringReader != null)
@@ -111,6 +143,7 @@ public class GameManager : MonoBehaviour
         Rigidbody2D rigid = enemy.GetComponent<Rigidbody2D>();      //enemy의 Rigidbody2D 컴포넌트를 가져올 rigid 변수 선언
         Enemy enemyLogic = enemy.GetComponent<Enemy>();             //enemy의 스크립트를 가져올 enemyLogic 변수 선언
         enemyLogic.player = player;         //Enemy 스크립트 안의 player를 GameManager에서 가져온 player로 지정해줌
+        enemyLogic.gameManager = this;
         enemyLogic.objectManager = objectManager;         //Enemy 스크립트 안의 player를 GameManager에서 가져온 player로 지정해줌
 
         //랜덤으로 생성하는 위치가 5번혹은 6번이라면(오른쪽)
@@ -171,6 +204,15 @@ public class GameManager : MonoBehaviour
         {
             boomImage[index].color = new Color(1, 1, 1, 1);
         }
+    }
+
+    public void callExplosion(Vector3 pos, string type)
+    {
+        GameObject explosion = objectManager.MakeObj("Explosion");
+        Explosion explosionLogic = explosion.GetComponent<Explosion>();
+
+        explosion.transform.position = pos;
+        explosionLogic.StartExplosion(type);
     }
 
     //게임오버 UI 작동 시키는 public 함수 GameOver 선언
