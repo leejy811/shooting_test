@@ -45,6 +45,8 @@ public class Player : MonoBehaviour
     public bool isControl;
     public bool isButtonA;
     public bool isButtonB;
+	
+	public int test;
 
     Animator anim;      //Animator 컴포넌트 변수
     SpriteRenderer spriteRenderer;
